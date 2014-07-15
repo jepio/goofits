@@ -1,4 +1,4 @@
-My GooFit Applications
+goofits
 ======================
 
 These are the applications I wrote to test the
@@ -8,5 +8,5 @@ They compile on the supercomputer Zeus at ACK Cyfronet, compiling them elsewhere
 These have been prepared with the CUDA backend in mind, however nothing stands
 in the way of building them for OMP.
 
-To test them run `make` and then launch the binary. The data `.dat` files are expected
+To test them run `make` and then launch the binary. The data (`.txt` or `.dat`) files are expected
 to be in the same directory as the executable. 
