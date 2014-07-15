@@ -10,4 +10,3 @@ in the way of building them for OMP.
 
 To test them run `make` and then launch the binary. The data `.dat` files are expected
 to be in the same directory as the executable. 
-
