@@ -32,7 +32,7 @@ endif
 WRKDIR=$(GOOFITDIR)/wrkdir/
 
 # Nazwa własnej aplikacji
-PROGRAMS=sumfit prodfit gaussfit
+PROGRAMS=sumfit prodfit gaussfit stepfit
 
 all: $(PROGRAMS)
 
