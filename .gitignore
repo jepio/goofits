@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # The full data set
 mixed_full.dat
 # Object files
@@ -8,6 +7,9 @@ mixedfit
 gaussfit
 prodfit
 sumfit
+# plots
+*.pdf
+*.png
 =======
 # Compiled Object files
 *.slo
@@ -30,4 +32,3 @@ sumfit
 *.exe
 *.out
 *.app
->>>>>>> FETCH_HEAD
