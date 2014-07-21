@@ -44,25 +44,34 @@ GOOBJS= $(WRKDIR)/Variable.o $(WRKDIR)/FitManager.o $(WRKDIR)/Faddeeva.o $(WRKDI
 PROGRAMS=own_pdf_fit
 # Własne PDFy (wildcard mi nie działało)
 PDFS := $(wildcard *Pdf.cu)
+PDFOBJS = $(PDFS:.cu=.o)
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) $(PDFOBJS)
 
 ## Budowa własnej biblioteki PDFów zawierającej wszystkie istniejące
-GooCUDA.o: GooPdfCUDA.o $(PDFS:.cu=.o) 
+ifeq ($(TARGET_OMP),)
+# Specjalne procedury dla CUDA
+GooCUDA.o: GooPdfCUDA.o $(PDFOBJS)
 	@echo "Building all PDFs"
 	@$(CXX) $(CXXFLAGS) -dlink $^ -o $@ 2>/dev/null && echo "PDFs built"
 
 GooPdfCUDA.o: $(WRKDIR)/CUDAglob.cu
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -DDUMMY=dummy -dc -o $@ $<
 
-$(PDFS:.cu=.o):
-	$(CXX) $(INCLUDES) $(CXXFLAGS) -dc -o $@ $*.cu 
-
+$(PDFOBJS):
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -dc -o $@ $*.cu
 
 # Linkowanie aplikacji
 %: %.o GooCUDA.o
-	$(LD) GooCUDA.o $(CXXFLAGS) $(LDFLAGS) $(LIBS)  $(GOOBJS) GooPdfCUDA.o $(PDFS:.cu=.o) $< -o $@
+	$(LD) GooCUDA.o $(CXXFLAGS) $(LDFLAGS) $(LIBS)  $(GOOBJS) GooPdfCUDA.o $(PDFOBJS) $< -o $@
 	@echo "Building $* is done"
+
+else
+# Dla OMP nie sa wymagane zadne specjalne reguly
+%: $(PDFOBJS) %.o
+	$(LD) $(LDFLAGS) $(LIBS) $(WRKDIR)/*.o $^ -o $@
+
+endif
 
 
 # Kompilacja aplikacji

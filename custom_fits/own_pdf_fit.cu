@@ -2,7 +2,9 @@
 #include "UnbinnedDataSet.hh" 
 #include "FitManager.hh"
 
+#ifndef THRUST_DEVICE_SYSTEM
 #include "gputimer.cuh"
+#endif
 
 #include "TRandom.h" 
 #include "TH1F.h"
@@ -147,16 +149,20 @@ int main (int argc, char** argv) {
   GooPdf* total = new NovoPdf("novo",xvar,p,w,t); // Replace with your PDF constructor. 
   //total = new BifPdf("bif",xvar,mean,sL,sR);
   //total = new LanPdf("landau",xvar,mean,scale);
+#ifndef THRUST_DEVICE_SYSTEM
   GpuTimer timer;
   timer.Start();
+#endif
   if (total) {
     total->setData(data);
     FitManager fitter(total);
     fitter.fit(); 
     fitter.getMinuitValues(); 
   }
+#ifndef THRUST_DEVICE_SYSTEM
   timer.Stop();
   cout << "GPU time: " << timer.Elapsed() << " msecs" << endl;
+#endif
 
   TH1F pdfHist("pdfHist", "", xvar->numbins, xvar->lowerlimit, xvar->upperlimit);
   pdfHist.SetStats(false);
