@@ -58,8 +58,8 @@ GooCUDA.o: GooPdfCUDA.o $(PDFOBJS)
 GooPdfCUDA.o: $(WRKDIR)/CUDAglob.cu
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -DDUMMY=dummy -dc -o $@ $<
 
-$(PDFOBJS):
-	$(CXX) $(INCLUDES) $(CXXFLAGS) -dc -o $@ $*.cu
+%Pdf.o: %Pdf.cu
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -dc -o $@ $*Pdf.cu
 
 # Linkowanie aplikacji
 %: %.o GooCUDA.o
@@ -80,4 +80,4 @@ endif
 
 
 clean:
-	@rm -f *.o $(PROGRAMS)
+	@rm -f $(PDFOBJS) $(PROGRAMS)
