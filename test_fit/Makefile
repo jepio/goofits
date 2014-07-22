@@ -80,4 +80,4 @@ endif
 
 
 clean:
-	@rm -f *.o $(PROGRAMS)
+	@rm -f $(PDFOBJS) $(PROGRAMS)
