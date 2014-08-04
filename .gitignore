@@ -1,5 +1,7 @@
 # The full data set
 mixed_full.dat
+# fft data
+*.file
 # Object files
 *.o
 # Binary files
