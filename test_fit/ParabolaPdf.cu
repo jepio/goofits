@@ -7,7 +7,8 @@ indices){
     fptype p = pars[indices[2]];
     fptype q = pars[indices[3]];
     fptype ret = a*(x-p)*(x-p) +q;
-    if (ret < 0) ret *= -1;
+    if (ret < 0)
+        ret *= -1;
     return ret;
 }
 
