@@ -5,7 +5,7 @@
 
 #include "myfft.h"
 
-template <typename T> std::vector<T>& read_data(std::string filename);
+template <typename T> std::vector<T> read_data(std::string filename)
 {
     std::vector<T> data;
     std::ifstream file;
@@ -45,7 +45,7 @@ struct complex_mag_functor : public thrust::unary_function<cufftComplex, float>
 };
 #endif
 
-template <typename T> std::vector<T>& fft_cuda(std::vector<T>& in);
+template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
 {
     cufftReal *d_in;
     size_t output_size = in.size()/2+1;
@@ -98,7 +98,7 @@ int main(void)
      * Could be expanded to support doubles, but thats about all that can be
      * done.
      */
-    in = read_data("in.file");
+    in = read_data<float>("in.file");
     assert(in.size() != 0);
     std::vector<float> out;
     out = fft_cuda(in);

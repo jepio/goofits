@@ -23,9 +23,9 @@
 #endif
 
 
-template <typename T> std::vector<T>& read_data(std::string filename);
+template <typename T> std::vector<T> read_data(std::string filename);
 
-template <typename T> std::vector<T>& fft_cuda(std::vector<T>& in);
+template <typename T> std::vector<T> fft_cuda(std::vector<T>& in);
 
 __global__ void magnitude(cufftComplex *, float * , size_t);
 
