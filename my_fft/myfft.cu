@@ -5,8 +5,9 @@
 
 #include "myfft.h"
 
-template <typename T> void read_data(std::vector<T> &data, std::string filename)
+template <typename T> std::vector<T>& read_data(std::string filename);
 {
+    std::vector<T> data;
     std::ifstream file;
     file.open(filename.c_str());
     T t, y;
@@ -21,6 +22,7 @@ template <typename T> void read_data(std::vector<T> &data, std::string filename)
     i--;
     std::cout << i <<std::endl; 
     file.close();
+    return data;
 }
 
 __global__ void magnitude(cufftComplex *in, float *out, size_t size)
@@ -43,7 +45,7 @@ struct complex_mag_functor : public thrust::unary_function<cufftComplex, float>
 };
 #endif
 
-template <typename T> void fft_cuda(std::vector<T> in, std::vector<T> &out)
+template <typename T> std::vector<T>& fft_cuda(std::vector<T>& in);
 {
     cufftReal *d_in;
     size_t output_size = in.size()/2+1;
@@ -58,6 +60,7 @@ template <typename T> void fft_cuda(std::vector<T> in, std::vector<T> &out)
     cufftPlan1d(&plan,in.size(), CUFFT_R2C,1); 
     cufftExecR2C(plan,d_in,d_out);
     // Calculate absolute values on GPU and copy to CPU
+    std::vector<T> out;
     #ifndef THRUST
     T *d_abs;
     checkCudaErrors(cudaMalloc((void **)&d_abs, sizeof(*d_abs)*output_size));
@@ -84,6 +87,7 @@ template <typename T> void fft_cuda(std::vector<T> in, std::vector<T> &out)
     #ifndef THRUST
     cudaFree(d_abs);
     #endif
+    return out;
 }
 
 int main(void)
@@ -94,10 +98,10 @@ int main(void)
      * Could be expanded to support doubles, but thats about all that can be
      * done.
      */
-    read_data(in, "in.file");
+    in = read_data("in.file");
     assert(in.size() != 0);
     std::vector<float> out;
-    fft_cuda(in, out);
+    out = fft_cuda(in);
     std::ofstream outfile;
     outfile.open("fft.file");
     if (outfile.is_open()){
