@@ -42,7 +42,7 @@ struct complex_mag_functor : public thrust::unary_function<typename Vect<T>::typ
 
     __host__ __device__ T operator()(typename Vect<T>::type in)
     {
-        return par_abs(in);
+        return par_abs<T>(in);
     }
 };
 #endif
