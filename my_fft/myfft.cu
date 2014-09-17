@@ -82,8 +82,8 @@ template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
     thrust::device_vector<T> thr_out(output_size);
     thrust::transform(dev_thr_out, dev_thr_out+output_size, thr_out.begin(),complex_mag_functor<T>());
     thrust::copy(thr_out.begin(),thr_out.end(),&out[0]);
-    cufftDestroy(plan);
     #endif
+    cufftDestroy(plan);
     cudaFree(d_in);
     cudaFree(d_out);
     #ifndef THRUST
