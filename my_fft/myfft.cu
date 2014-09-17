@@ -25,35 +25,37 @@ template <typename T> std::vector<T> read_data(std::string filename)
     return data;
 }
 
-__global__ void magnitude(cufftComplex *in, float *out, size_t size)
+template <typename T>
+__global__ void magnitude(vector_type<T> *in, T *out, size_t size)
 {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     if (idx < size){
-        out[idx] = cuCabsf(in[idx]);
+        out[idx] = par_abs(in[idx]);
     }
 }
 
 #ifdef THRUST
-struct complex_mag_functor : public thrust::unary_function<cufftComplex, float>
+template <typename T>
+struct complex_mag_functor : public thrust::unary_function<vector_type<T>,T>
 {
     complex_mag_functor(){}
 
-    __host__ __device__ float operator()(cufftComplex in)
+    __host__ __device__ T operator()(vector_type<T> in)
     {
-        return cuCabsf(in);
+        return par_abs(in);
     }
 };
 #endif
 
 template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
 {
-    cufftReal *d_in;
+    T *d_in;
     size_t output_size = in.size()/2+1;
     // Copy input data to GPU
     checkCudaErrors(cudaMalloc((void **)&d_in,sizeof(T)*in.size()));
     checkCudaErrors(cudaMemcpy(d_in, &in[0], sizeof(T)*in.size(),cudaMemcpyHostToDevice));
     // Allocate space for output on GPU
-    cufftComplex *d_out;
+    vector_type<T> *d_out;
     checkCudaErrors(cudaMalloc((void **)&d_out,sizeof(*d_out)*output_size));
     // Perform FFT
     cufftHandle plan;
@@ -75,10 +77,10 @@ template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
     #endif
     // Thrust version
     #ifdef THRUST
-    thrust::device_ptr<cufftComplex> dev_thr_out(d_out);
+    thrust::device_ptr< vector_type<T> > dev_thr_out(d_out);
     out.resize(output_size);
     thrust::device_vector<T> thr_out(output_size);
-    thrust::transform(dev_thr_out, dev_thr_out+output_size, thr_out.begin(),complex_mag_functor());
+    thrust::transform(dev_thr_out, dev_thr_out+output_size, thr_out.begin(),complex_mag_functor<T>());
     thrust::copy(thr_out.begin(),thr_out.end(),&out[0]);
     cufftDestroy(plan);
     #endif
