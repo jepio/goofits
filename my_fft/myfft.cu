@@ -26,21 +26,21 @@ template <typename T> std::vector<T> read_data(std::string filename)
 }
 
 template <typename T>
-__global__ void magnitude(Vect<T>::type *in, T *out, size_t size)
+__global__ void magnitude(typename Vect<T>::type *in, T *out, size_t size)
 {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     if (idx < size){
-        out[idx] = par_abs(in[idx]);
+        out[idx] = par_abs<T>(in[idx]);
     }
 }
 
 #ifdef THRUST
 template <typename T>
-struct complex_mag_functor : public thrust::unary_function<Vect<T>::type,T>
+struct complex_mag_functor : public thrust::unary_function<typename Vect<T>::type,T>
 {
     complex_mag_functor(){}
 
-    __host__ __device__ T operator()(Vect<T>::type in)
+    __host__ __device__ T operator()(typename Vect<T>::type in)
     {
         return par_abs(in);
     }
@@ -55,12 +55,12 @@ template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
     checkCudaErrors(cudaMalloc((void **)&d_in,sizeof(T)*in.size()));
     checkCudaErrors(cudaMemcpy(d_in, &in[0], sizeof(T)*in.size(),cudaMemcpyHostToDevice));
     // Allocate space for output on GPU
-    Vect<T>::type *d_out;
+    typename Vect<T>::type *d_out;
     checkCudaErrors(cudaMalloc((void **)&d_out,sizeof(*d_out)*output_size));
     // Perform FFT
     cufftHandle plan;
-    cufftPlan1d(&plan,in.size(), CUFFT_R2C,1); 
-    cufftExecR2C(plan,d_in,d_out);
+    cufftPlan1d(&plan,in.size(), Vect<T>::plantype,1); 
+    Vect<T>::ptr(plan,d_in,d_out);
     // Calculate absolute values on GPU and copy to CPU
     std::vector<T> out;
     #ifndef THRUST
@@ -94,15 +94,12 @@ template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
 
 int main(void)
 {
-    std::vector<float> in;
-    /*
-     * Theoretically I used templates, however it will only work for floats.
-     * Could be expanded to support doubles, but thats about all that can be
-     * done.
-     */
-    in = read_data<float>("in.file");
+    // templated calculation type should be chosen here (convenience)
+    typedef double  data_t;
+    std::vector<data_t> in;
+    in = read_data<data_t>("in.file");
     assert(in.size() != 0);
-    std::vector<float> out;
+    std::vector<data_t> out;
     out = fft_cuda(in);
     std::ofstream outfile;
     outfile.open("fft.file");
