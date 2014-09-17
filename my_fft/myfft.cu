@@ -26,7 +26,7 @@ template <typename T> std::vector<T> read_data(std::string filename)
 }
 
 template <typename T>
-__global__ void magnitude(vector_type<T> *in, T *out, size_t size)
+__global__ void magnitude(Vect<T>::type *in, T *out, size_t size)
 {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     if (idx < size){
@@ -36,11 +36,11 @@ __global__ void magnitude(vector_type<T> *in, T *out, size_t size)
 
 #ifdef THRUST
 template <typename T>
-struct complex_mag_functor : public thrust::unary_function<vector_type<T>,T>
+struct complex_mag_functor : public thrust::unary_function<Vect<T>::type,T>
 {
     complex_mag_functor(){}
 
-    __host__ __device__ T operator()(vector_type<T> in)
+    __host__ __device__ T operator()(Vect<T>::type in)
     {
         return par_abs(in);
     }
@@ -55,7 +55,7 @@ template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
     checkCudaErrors(cudaMalloc((void **)&d_in,sizeof(T)*in.size()));
     checkCudaErrors(cudaMemcpy(d_in, &in[0], sizeof(T)*in.size(),cudaMemcpyHostToDevice));
     // Allocate space for output on GPU
-    vector_type<T> *d_out;
+    Vect<T>::type *d_out;
     checkCudaErrors(cudaMalloc((void **)&d_out,sizeof(*d_out)*output_size));
     // Perform FFT
     cufftHandle plan;
@@ -77,7 +77,7 @@ template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
     #endif
     // Thrust version
     #ifdef THRUST
-    thrust::device_ptr< vector_type<T> > dev_thr_out(d_out);
+    thrust::device_ptr< Vect<T>::type > dev_thr_out(d_out);
     out.resize(output_size);
     thrust::device_vector<T> thr_out(output_size);
     thrust::transform(dev_thr_out, dev_thr_out+output_size, thr_out.begin(),complex_mag_functor<T>());

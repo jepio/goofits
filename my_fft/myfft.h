@@ -27,18 +27,28 @@ template <typename T> std::vector<T> read_data(std::string filename);
 
 template <typename T> std::vector<T> fft_cuda(std::vector<T>& in);
 
-template <typename T>
-struct vector_type{
-    T x, y;
+template <typename T> struct Vect;
+template <> struct Vect<float>{
+    typedef cuComplex type;
+}
+template <> struct Vect<double>{
+    typedef cuDoubleComplex type;
 }
 
-template <typename T>
-__device__ __host__ __inline__ T par_abs(vector_type<T> in)
-{
-    return sqrt(in.x*in.x + in.y*in.y);
-}
 
 template <typename T>
-__global__ void magnitude(vector_type<T> *, T * , size_t);
+__device__ __host__ __inline__ T par_abs(Vect<T>::type in);
+template <>
+__device__ __host__ __inline__ float par_abs<float>(Vect<float>::type in){
+    return cuCabsf(in);
+}
+template <>
+__device__ __host__ __inline__ double par_abs<double>(Vect<double>::type in){
+    return cuCabs(in);
+}
+
+
+template <typename T>
+__global__ void magnitude(Vect<T>::type *, T * , size_t);
 
 #endif /* MYFFT_H */
