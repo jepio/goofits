@@ -47,7 +47,7 @@ Vect<double>::func Vect<double>::ptr = cufftExecD2Z;
 template <typename T>
 __device__ __host__ __inline__ T par_abs(typename Vect<T>::type in);
 template <>
-__device__ __host__ __inline__ float par_abs<float>( Vect<float>::type in){
+__device__ __host__ __inline__ float par_abs<float>(Vect<float>::type in){
     return cuCabsf(in);
 }
 template <>
