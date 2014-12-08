@@ -27,7 +27,7 @@ __global__ void magnitude(typename Vect<T>::type *in, T *out, size_t size)
 {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     if (idx < size){
-        out[idx] = par_abs<T>(in[idx]);
+        out[idx] = par_abs(in[idx]);
     }
 }
 
@@ -38,7 +38,7 @@ struct complex_mag_functor : public thrust::unary_function<typename Vect<T>::typ
 
     __host__ __device__ T operator()(typename Vect<T>::type in)
     {
-        return par_abs<T>(in);
+        return par_abs(in);
     }
 };
 #endif
@@ -90,7 +90,7 @@ template <typename T> std::vector<T> fft_cuda(const std::vector<T>& in)
 int main()
 {
     // templated calculation type should be chosen here (convenience)
-    typedef std::vector<double> data_v;
+    typedef std::vector<float> data_v;
 
     data_v in = read_data<data_v::value_type>("file.in");
 
