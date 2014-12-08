@@ -1,27 +1,24 @@
-/* 
+/*
  * Test of the CuFFT library. Calculating the absolute values of the complex
  * output can be done using a kernel or a thrust::transform operation.
  */
 
 #include "myfft.h"
+#include <stdexcept>
 
 template <typename T> std::vector<T> read_data(std::string filename)
 {
     std::vector<T> data;
-    std::ifstream file;
-    file.open(filename.c_str());
+    std::ifstream file(filename.c_str());
+    if (!file)
+        throw std::runtime_error("File couldn't be opened.");
+
     T t, y;
-    int i=0;
-    while (file.good()){
-        file >> t >> y;
+    while (file >> t >> y){
         data.push_back(y);
-        i++;
     }
-    // Last element gets read twice this way. Remove it.
-    data.pop_back();
-    i--;
-    std::cout << i <<std::endl; 
-    file.close();
+
+    std::cout << data.size() <<std::endl;
     return data;
 }
 
@@ -36,8 +33,7 @@ __global__ void magnitude(typename Vect<T>::type *in, T *out, size_t size)
 
 #ifdef THRUST
 template <typename T>
-struct complex_mag_functor : public thrust::unary_function<typename Vect<T>::type,T>
-{
+struct complex_mag_functor : public thrust::unary_function<typename Vect<T>::type, T> {
     complex_mag_functor(){}
 
     __host__ __device__ T operator()(typename Vect<T>::type in)
@@ -47,66 +43,66 @@ struct complex_mag_functor : public thrust::unary_function<typename Vect<T>::typ
 };
 #endif
 
-template <typename T> std::vector<T> fft_cuda(std::vector<T>& in)
+template <typename T> std::vector<T> fft_cuda(const std::vector<T>& in)
 {
     T *d_in;
-    size_t output_size = in.size()/2+1;
+    size_t output_size = in.size() / 2 + 1;
     // Copy input data to GPU
-    checkCudaErrors(cudaMalloc((void **)&d_in,sizeof(T)*in.size()));
-    checkCudaErrors(cudaMemcpy(d_in, &in[0], sizeof(T)*in.size(),cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMalloc((void **)&d_in, sizeof(T) * in.size()));
+    checkCudaErrors(cudaMemcpy(d_in, &in[0], sizeof(T) * in.size(), cudaMemcpyHostToDevice));
     // Allocate space for output on GPU
     typename Vect<T>::type *d_out;
-    checkCudaErrors(cudaMalloc((void **)&d_out,sizeof(*d_out)*output_size));
+    checkCudaErrors(cudaMalloc((void **)&d_out, sizeof(*d_out) * output_size));
     // Perform FFT
     cufftHandle plan;
-    cufftPlan1d(&plan,in.size(), Vect<T>::plantype,1); 
-    Vect<T>::ptr(plan,d_in,d_out);
+    cufftPlan1d(&plan, in.size(), Vect<T>::plantype, 1);
+    Vect<T>::ptr(plan, d_in, d_out);
     // Calculate absolute values on GPU and copy to CPU
     std::vector<T> out;
-    #ifndef THRUST
+
+#ifndef THRUST
     T *d_abs;
     checkCudaErrors(cudaMalloc((void **)&d_abs, sizeof(*d_abs)*output_size));
     size_t blockSize = 1024;
     size_t gridSize = output_size / blockSize + 1;
     magnitude <<<gridSize, blockSize>>>(d_out, d_abs, output_size);
-    
+
     out.resize(output_size);
     checkCudaErrors(cudaMemcpy(&out[0], d_abs,
-                    sizeof(*d_abs)*output_size,cudaMemcpyDeviceToHost));
+                    sizeof(*d_abs) * output_size, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
-    #endif
+    cudaFree(d_abs);
+#endif
     // Thrust version
-    #ifdef THRUST
-    thrust::device_ptr< Vect<T>::type > dev_thr_out(d_out);
+#ifdef THRUST
+    thrust::device_ptr<typename Vect<T>::type> dev_thr_out(d_out);
     out.resize(output_size);
     thrust::device_vector<T> thr_out(output_size);
-    thrust::transform(dev_thr_out, dev_thr_out+output_size, thr_out.begin(),complex_mag_functor<T>());
-    thrust::copy(thr_out.begin(),thr_out.end(),&out[0]);
-    #endif
+    thrust::transform(dev_thr_out, dev_thr_out + output_size, thr_out.begin(), complex_mag_functor<T>());
+    thrust::copy(thr_out.begin(),thr_out.end(), &out[0]);
+#endif
     cufftDestroy(plan);
     cudaFree(d_in);
     cudaFree(d_out);
-    #ifndef THRUST
-    cudaFree(d_abs);
-    #endif
     return out;
 }
 
-int main(void)
+int main()
 {
     // templated calculation type should be chosen here (convenience)
-    typedef double  data_t;
-    std::vector<data_t> in;
-    in = read_data<data_t>("in.file");
+    typedef std::vector<double> data_v;
+
+    data_v in = read_data<data_v::value_type>("file.in");
+
     assert(in.size() != 0);
-    std::vector<data_t> out;
-    out = fft_cuda(in);
-    std::ofstream outfile;
-    outfile.open("fft.file");
-    if (outfile.is_open()){
-        for(unsigned int i=0;i<out.size();i++)
-            outfile<<out[i]<<std::endl;
+
+    data_v out = fft_cuda(in);
+    std::ofstream outfile("fft.file");
+
+    if (outfile){
+        for(data_v::iterator i = out.begin(), e = out.end(); i != e; ++i)
+            outfile << *i << std::endl;
     }
-    outfile.close();
+
     return 0;
 }
