@@ -59,9 +59,15 @@ GooPdfCUDA.o: $(WRKDIR)/CUDAglob.cu
 	$(NVCC) $(INCLUDES) $(CXXFLAGS) -dc -o $@ $<
 
 # Linkowanie aplikacji
+ifeq ($(PDFS),)
+%: %.o
+	@echo "Linking $^"
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(LIBS) $(GOOBJS) $(WRKDIR)/GooPdfCUDA.o $< -o $@
+else
 %: %.o GooCUDA.o
 	@echo "Linking $^ $(PDFOBJS)"
 	$(LD) GooCUDA.o $(CXXFLAGS) $(LDFLAGS) $(LIBS) $(GOOBJS) GooPdfCUDA.o $(PDFOBJS) $< -o $@
+endif
 
 else
 # Dla OMP nie sa wymagane zadne specjalne reguly
