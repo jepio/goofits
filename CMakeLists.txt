@@ -34,14 +34,15 @@ foreach(src ${GOOOBJS})
     list(APPEND _tmp ${GOOFIT}/wrkdir/${src})
 endforeach()
 set(GOOOBJS ${_tmp})
-add_library(goofit ${GOOOBJS})
-set_target_properties(goofit PROPERTIES LINKER_LANGUAGE CXX)
+add_library(goofit_common ${GOOOBJS})
+set_target_properties(goofit_common PROPERTIES LINKER_LANGUAGE CXX)
 ### build library of PDFs
-cuda_add_library(pdf_lib SHARED ${GOOFIT}/wrkdir/CUDAglob.cu 
+cuda_add_library(goofit_pdf SHARED ${GOOFIT}/wrkdir/CUDAglob.cu 
     OPTIONS -DDUMMY=dummy)
+
 function(link_goofit TARGET)
-    target_link_libraries(${TARGET} ${ROOTUTILS_LIB} pdf_lib goofit
-        ${ROOT_LIBRARIES})
+    target_link_libraries(${TARGET} ${ROOTUTILS_LIB} goofit_pdf
+        goofit_common ${ROOT_LIBRARIES})
 endfunction()
 
 add_subdirectory(my_fft)
