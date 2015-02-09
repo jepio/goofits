@@ -92,7 +92,7 @@ int main()
     // templated calculation type should be chosen here (convenience)
     typedef std::vector<float> data_v;
 
-    data_v in = read_data<data_v::value_type>("file.in");
+    data_v in = read_data<data_v::value_type>("in.file");
 
     assert(in.size() != 0);
 
