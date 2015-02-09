@@ -6,5 +6,11 @@ all: $(dirs)
 clean: target=clean
 clean: $(dirs)
 
-$(dirs): 
+$(dirs): | GooPdfCUDA.o
 	+make -C $@ $(target)
+
+include common.mk
+
+GooPdfCUDA.o: $(WRKDIR)/CUDAglob.cu
+	@echo "Compiling GooFit PDFs."
+	$(NVCC) $(INCLUDES) $(CXXFLAGS) -DDUMMY=dummy -dc -o $@ $<
